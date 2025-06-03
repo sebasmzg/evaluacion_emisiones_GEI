@@ -18,9 +18,6 @@ import styles from "./SeccionEntradaConsumo.module.css"
 export function SeccionEntradaConsumo() {
   const [consumos, setConsumos] = useState<ConsumoEnergetico[]>(CONSUMOS_PRECARGADOS)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [newConsumo, setNewConsumo] = useState<Partial<ConsumoEnergetico>>({
-    anio: new Date().getFullYear(),
-  })
 
   const handleEdit = (id: string) => {
     setEditingId(id)
@@ -39,14 +36,21 @@ export function SeccionEntradaConsumo() {
   }
 
   const handleAdd = () => {
+    const currentYear = new Date().getFullYear()
+    const defaultFE = 0.2
+    
+    // Obtener el factor de emisión más reciente
+    const fe = Object.entries(FE_SIN_ANUAL)
+      .sort(([yearA], [yearB]) => Number(yearB) - Number(yearA))[0][1]
+    
     const newConsumo: ConsumoEnergetico = {
       id: crypto.randomUUID(),
-      anio: new Date().getFullYear(),
+      anio: currentYear,
       electricidad_kWh: 0,
       gas_natural_m3: 0,
       glp_kg: 0,
       carbon_kg: 0,
-      fe_sin_kgCO2kWh: FE_SIN_ANUAL[new Date().getFullYear()] || 0.2,
+      fe_sin_kgCO2kWh: fe || defaultFE,
     }
     setConsumos([...consumos, newConsumo])
     setEditingId(newConsumo.id)

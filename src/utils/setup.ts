@@ -9,7 +9,7 @@ class ResizeObserverMock {
   disconnect() {}
 }
 
-global.ResizeObserver = ResizeObserverMock
+(globalThis as any).ResizeObserver = ResizeObserverMock
 
 afterEach(() => {
   cleanup()

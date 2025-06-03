@@ -6,17 +6,14 @@ import { SeccionEntradaConsumo } from "../components/SeccionEntradaConsumo"
 import { SeccionEntradaValorAgregado } from "../components/SeccionEntradaValorAgregado"
 import { Graficos } from "../components/Graficos"
 import { Button } from "../components/ui/button"
-import type { ConsumoEnergetico, ValorAgregado } from "../models/interfaces"
 import styles from "./Dashboard.module.css"
 
 const Dashboard = () => {
-  const [consumos, setConsumos] = useState<ConsumoEnergetico[]>(CONSUMOS_PRECARGADOS)
-  const [valoresAgregados, setValoresAgregados] = useState<ValorAgregado[]>(VA_PRECARGADO)
-  const [resultados, setResultados] = useState(calcularResultados(consumos, valoresAgregados))
+  const [resultados, setResultados] = useState(calcularResultados(CONSUMOS_PRECARGADOS, VA_PRECARGADO))
   const [mostrarGraficos, setMostrarGraficos] = useState(false)
 
   const handleCalcular = () => {
-    const nuevosResultados = calcularResultados(consumos, valoresAgregados)
+    const nuevosResultados = calcularResultados(CONSUMOS_PRECARGADOS, VA_PRECARGADO)
     setResultados(nuevosResultados)
     setMostrarGraficos(true)
   }
@@ -38,7 +35,7 @@ const Dashboard = () => {
         {mostrarGraficos && resultados.length > 0 && (
           <div className={styles.resultsSection}>
             <h2 className={styles.resultsTitle}>Resultados</h2>
-            <Graficos resultados={resultados} valoresAgregados={valoresAgregados} />
+            <Graficos resultados={resultados} valoresAgregados={VA_PRECARGADO} />
           </div>
         )}
       </div>

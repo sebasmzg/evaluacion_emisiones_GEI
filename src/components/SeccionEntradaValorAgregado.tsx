@@ -16,9 +16,6 @@ import styles from "./SeccionEntradaValorAgregado.module.css"
 export function SeccionEntradaValorAgregado() {
   const [valoresAgregados, setValoresAgregados] = useState<ValorAgregado[]>(VA_PRECARGADO)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [newVA, setNewVA] = useState<Partial<ValorAgregado>>({
-    anio: new Date().getFullYear(),
-  })
 
   const handleEdit = (id: string) => {
     setEditingId(id)

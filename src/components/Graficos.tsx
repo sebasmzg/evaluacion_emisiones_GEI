@@ -238,7 +238,7 @@ export function Graficos({ resultados, valoresAgregados }: GraficosProps) {
                     outerRadius={100}
                     dataKey="value"
                   >
-                    {datos.map((entry, index) => (
+                    {datos.map((_, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={CHART_COLORS[index % CHART_COLORS.length]}
