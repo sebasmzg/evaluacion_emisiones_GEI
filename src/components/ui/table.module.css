@@ -1,0 +1,67 @@
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  caption-side: bottom;
+  text-indent: 0;
+}
+
+.tableHeader {
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tableHeaderCell {
+  padding: 0.75rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.tableBody {
+  background-color: white;
+}
+
+.tableRow {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 200ms;
+}
+
+.tableRow:hover {
+  background-color: #f9fafb;
+}
+
+.tableCell {
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  color: #111827;
+}
+
+.actionCell {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.editButton,
+.deleteButton {
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: background-color 200ms;
+}
+
+.editButton {
+  color: #3b82f6;
+}
+
+.editButton:hover {
+  background-color: #eff6ff;
+}
+
+.deleteButton {
+  color: #ef4444;
+}
+
+.deleteButton:hover {
+  background-color: #fef2f2;
+} 
