@@ -33,22 +33,37 @@ const COLORS = {
 
 const CHART_COLORS = [COLORS.primary, COLORS.secondary, COLORS.accent, COLORS.neutral]
 
-export function Graficos({ resultados, valoresAgregados }: GraficosProps) {
-  const años = useMemo(
-    () => [...new Set(resultados.map((r) => r.anio))].sort(),
-    [resultados]
-  )
+// Agregar helper para ordenar datos por año
+const ordenarPorAño = <T extends { anio: number }>(datos: T[]) => {
+  return [...datos].sort((a, b) => a.anio - b.anio)
+}
 
-  const [añosSeleccionados, setAñosSeleccionados] = useState<number[]>(años)
+export function Graficos({ resultados, valoresAgregados }: GraficosProps) {
+  // Obtener años de cada fuente de datos
+  const añosResultados = useMemo(() => {
+    return [...new Set(resultados.map(r => r.anio))].sort((a, b) => b - a)
+  }, [resultados])
+
+  const añosVA = useMemo(() => {
+    return [...new Set(valoresAgregados.map(va => va.anio))].sort((a, b) => b - a)
+  }, [valoresAgregados])
+
+  const [añosSeleccionadosResultados, setAñosSeleccionadosResultados] = useState<number[]>(añosResultados)
+  const [añosSeleccionadosVA, setAñosSeleccionadosVA] = useState<number[]>(añosVA)
+
+  // Actualizar años seleccionados cuando cambien los datos
+  useEffect(() => {
+    setAñosSeleccionadosResultados(añosResultados)
+  }, [añosResultados])
 
   useEffect(() => {
-    setAñosSeleccionados(años)
-  }, [años])
+    setAñosSeleccionadosVA(añosVA)
+  }, [añosVA])
 
   const datosEmisiones = useMemo(
     () =>
       resultados
-        .filter((r) => añosSeleccionados.includes(r.anio))
+        .filter((r) => añosSeleccionadosResultados.includes(r.anio))
         .map((r) => ({
           anio: r.anio,
           Electricidad: Number(r.emisionesElectricidad.toFixed(2)),
@@ -56,13 +71,14 @@ export function Graficos({ resultados, valoresAgregados }: GraficosProps) {
           GLP: Number(r.emisionesGLP.toFixed(2)),
           Carbón: Number(r.emisionesCarbon.toFixed(2)),
           Total: Number(r.totalEmisiones.toFixed(2)),
-        })),
-    [resultados, añosSeleccionados]
+        }))
+        .sort((a, b) => a.anio - b.anio),
+    [resultados, añosSeleccionadosResultados]
   )
 
   const datosVAPorAño = useMemo(() => {
     return valoresAgregados
-      .filter((va) => añosSeleccionados.includes(va.anio))
+      .filter((va) => añosSeleccionadosVA.includes(va.anio))
       .map((va) => {
         const total = va.primario_COP + va.secundario_COP + va.terciario_COP
         return {
@@ -83,49 +99,113 @@ export function Graficos({ resultados, valoresAgregados }: GraficosProps) {
           ],
         }
       })
-  }, [valoresAgregados, añosSeleccionados])
+      .sort((a, b) => b.anio - a.anio)
+  }, [valoresAgregados, añosSeleccionadosVA])
 
   const datosKuznets = useMemo(
-    () =>
-      resultados.map((r) => ({
-        x: r.valorAgregadoTotal / 1e9,
-        y: r.energiaTotalTJ,
-        anio: r.anio,
-      })),
-    [resultados]
+    () => {
+      // Obtener años comunes y ordenarlos cronológicamente
+      const añosComunes = [...new Set(
+        resultados
+          .filter(r => 
+            añosSeleccionadosResultados.includes(r.anio) && 
+            añosSeleccionadosVA.includes(r.anio)
+          )
+          .map(r => r.anio)
+      )].sort((a, b) => a - b)
+
+      // Encontrar el rango de VA para normalizar
+      const datosVA = añosComunes.map(año => {
+        const resultado = resultados.find(r => r.anio === año)
+        return resultado ? resultado.valorAgregadoTotal / 1e9 : 0
+      })
+      const minVA = Math.min(...datosVA)
+      const maxVA = Math.max(...datosVA)
+      const rangoVA = maxVA - minVA
+
+      // Crear puntos de datos ordenados cronológicamente
+      return añosComunes
+        .map((año, index) => {
+          const resultado = resultados.find(r => r.anio === año)
+          if (!resultado) return null
+
+          const energiaGWh = resultado.energiaTotalTJ * 0.277778
+          const va = resultado.valorAgregadoTotal / 1e9
+
+          return {
+            // Usar el índice como posición X para garantizar el orden
+            x: index,
+            y: energiaGWh,
+            anio: año,
+            va: va,
+            orden: index
+          }
+        })
+        .filter((punto): punto is NonNullable<typeof punto> => punto !== null)
+    },
+    [resultados, añosSeleccionadosResultados, añosSeleccionadosVA]
   )
 
-  const toggleAño = (año: number) => {
-    setAñosSeleccionados((prev) =>
+  const toggleAñoResultados = (año: number) => {
+    setAñosSeleccionadosResultados((prev) =>
       prev.includes(año)
         ? prev.filter((a) => a !== año)
-        : [...prev, año].sort()
+        : [...prev, año].sort((a, b) => b - a)
+    )
+  }
+
+  const toggleAñoVA = (año: number) => {
+    setAñosSeleccionadosVA((prev) =>
+      prev.includes(año)
+        ? prev.filter((a) => a !== año)
+        : [...prev, año].sort((a, b) => b - a)
     )
   }
 
   return (
     <div className={styles.container}>
-      {/* Selector de años */}
-      <div className={styles.yearSelector}>
-        <h3 className={styles.yearTitle}>
-          Seleccionar Años
-        </h3>
-        <div className={styles.yearButtons}>
-          {años.map((año) => (
-            <button
-              key={año}
-              onClick={() => toggleAño(año)}
-              className={`${styles.yearButton} ${
-                añosSeleccionados.includes(año) ? styles.yearButtonActive : ""
-              }`}
-            >
-              {año}
-            </button>
-          ))}
+      {/* Selectores de años */}
+      <div className={styles.yearSelectors}>
+        <div className={styles.yearSelectorGroup}>
+          <h3 className={styles.yearTitle}>
+            Años de Consumo Energético
+          </h3>
+          <div className={styles.yearButtons}>
+            {añosResultados.map((año) => (
+              <button
+                key={año}
+                onClick={() => toggleAñoResultados(año)}
+                className={`${styles.yearButton} ${
+                  añosSeleccionadosResultados.includes(año) ? styles.yearButtonActive : ""
+                }`}
+              >
+                {año}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.yearSelectorGroup}>
+          <h3 className={styles.yearTitle}>
+            Años de Valor Agregado
+          </h3>
+          <div className={styles.yearButtons}>
+            {añosVA.map((año) => (
+              <button
+                key={año}
+                onClick={() => toggleAñoVA(año)}
+                className={`${styles.yearButton} ${
+                  añosSeleccionadosVA.includes(año) ? styles.yearButtonActive : ""
+                }`}
+              >
+                {año}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {añosSeleccionados.length > 0 ? (
+      {(añosSeleccionadosResultados.length > 0 || añosSeleccionadosVA.length > 0) ? (
         <div className={styles.chartsGrid}>
           {/* Gráfico de línea: Emisiones totales por año */}
           <div className={styles.chartCard}>
@@ -133,15 +213,25 @@ export function Graficos({ resultados, valoresAgregados }: GraficosProps) {
               Emisiones Totales por Año
             </h3>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={datosEmisiones}>
+              <LineChart 
+                data={datosEmisiones}
+                margin={{ top: 20, right: 30, bottom: 40, left: 60 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="anio" stroke="#6B7280" />
+                <XAxis 
+                  dataKey="anio" 
+                  stroke="#6B7280"
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                />
                 <YAxis
                   stroke="#6B7280"
                   label={{
                     value: "tCO₂",
                     angle: -90,
                     position: "insideLeft",
+                    offset: -45,
                     style: { fill: "#6B7280" },
                   }}
                 />
@@ -152,7 +242,7 @@ export function Graficos({ resultados, valoresAgregados }: GraficosProps) {
                     borderRadius: "0.375rem",
                   }}
                 />
-                <Legend />
+                <Legend wrapperStyle={{ paddingTop: "20px" }}/>
                 <Line
                   type="monotone"
                   dataKey="Total"
@@ -170,15 +260,25 @@ export function Graficos({ resultados, valoresAgregados }: GraficosProps) {
               Emisiones por Fuente
             </h3>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={datosEmisiones}>
+              <BarChart 
+                data={datosEmisiones}
+                margin={{ top: 20, right: 30, bottom: 40, left: 60 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="anio" stroke="#6B7280" />
+                <XAxis 
+                  dataKey="anio" 
+                  stroke="#6B7280"
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
+                />
                 <YAxis
                   stroke="#6B7280"
                   label={{
                     value: "tCO₂",
                     angle: -90,
                     position: "insideLeft",
+                    offset: -45,
                     style: { fill: "#6B7280" },
                   }}
                 />
@@ -189,7 +289,7 @@ export function Graficos({ resultados, valoresAgregados }: GraficosProps) {
                     borderRadius: "0.375rem",
                   }}
                 />
-                <Legend />
+                <Legend wrapperStyle={{ paddingTop: "20px" }}/>
                 <Bar dataKey="Electricidad" fill={CHART_COLORS[0]} />
                 <Bar dataKey="Gas Natural" fill={CHART_COLORS[1]} />
                 <Bar dataKey="GLP" fill={CHART_COLORS[2]} />
@@ -205,7 +305,7 @@ export function Graficos({ resultados, valoresAgregados }: GraficosProps) {
                 Composición del Valor Agregado {anio} (%)
               </h3>
               <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
+                <PieChart margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
                   <Pie
                     data={datos}
                     cx="50%"
@@ -257,11 +357,7 @@ export function Graficos({ resultados, valoresAgregados }: GraficosProps) {
                     layout="horizontal"
                     verticalAlign="bottom"
                     align="center"
-                    formatter={(value: string) => (
-                      <span style={{ color: "#374151", fontSize: "0.875rem" }}>
-                        {value}
-                      </span>
-                    )}
+                    wrapperStyle={{ paddingTop: "20px" }}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -279,15 +375,20 @@ export function Graficos({ resultados, valoresAgregados }: GraficosProps) {
                 <XAxis
                   type="number"
                   dataKey="x"
-                  name="VA"
+                  name="Año"
                   stroke="#6B7280"
                   label={{
-                    value: "VA (MM COP)",
+                    value: "Año",
                     position: "bottom",
                     offset: 40,
                     style: { fill: "#6B7280", fontSize: 12 },
                   }}
-                  tickFormatter={(value) => value.toFixed(0)}
+                  tickFormatter={(value) => {
+                    const punto = datosKuznets[value]
+                    return punto ? punto.anio.toString() : ''
+                  }}
+                  ticks={datosKuznets.map((_, i) => i)}
+                  domain={[0, datosKuznets.length - 1]}
                 />
                 <YAxis
                   type="number"
@@ -295,13 +396,13 @@ export function Graficos({ resultados, valoresAgregados }: GraficosProps) {
                   name="Energía"
                   stroke="#6B7280"
                   label={{
-                    value: "Energía (TJ)",
+                    value: "Consumo Energético (GWh)",
                     angle: -90,
                     position: "insideLeft",
                     offset: -45,
                     style: { fill: "#6B7280", fontSize: 12 },
                   }}
-                  tickFormatter={(value) => value.toFixed(0)}
+                  tickFormatter={(value) => value.toFixed(1)}
                 />
                 <Tooltip
                   cursor={{ strokeDasharray: "3 3" }}
@@ -318,8 +419,8 @@ export function Graficos({ resultados, valoresAgregados }: GraficosProps) {
                     return (
                       <div className={styles.tooltipContent}>
                         <p className={styles.tooltipTitle}>Año: {data.anio}</p>
-                        <p className={styles.tooltipValue}>VA: {data.x.toFixed(0)} MM COP</p>
-                        <p className={styles.tooltipValue}>Energía: {data.y.toFixed(0)} TJ</p>
+                        <p className={styles.tooltipValue}>VA: {data.va.toFixed(0)} MM COP</p>
+                        <p className={styles.tooltipValue}>Energía: {data.y.toFixed(1)} GWh</p>
                       </div>
                     )
                   }}
@@ -328,6 +429,11 @@ export function Graficos({ resultados, valoresAgregados }: GraficosProps) {
                   name="Relación VA-Energía"
                   data={datosKuznets}
                   fill={COLORS.primary}
+                  line={{
+                    type: "linear",
+                    stroke: COLORS.primary,
+                    strokeWidth: 1
+                  }}
                   shape={(props: { cx?: number; cy?: number }) => (
                     <circle
                       cx={props.cx}

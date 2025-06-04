@@ -1,8 +1,11 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import type { ConsumoEnergetico } from "../models/interfaces"
+import { FE_SIN_ANUAL } from "../data/feSIN"
+import { FACTORES_COMBUSTIBLES } from "../data/factoresCombustibles"
 import { CONSUMOS_PRECARGADOS } from "../data/consumos"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
+import { ActionButtons } from "./ui/ActionButtons"
 import {
   Table,
   TableBody,
@@ -11,28 +14,61 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/table"
-import { FE_SIN_ANUAL } from "../data/feSIN"
-import { FACTORES_COMBUSTIBLES } from "../data/factoresCombustibles"
 import styles from "./SeccionEntradaConsumo.module.css"
 
-export function SeccionEntradaConsumo() {
-  const [consumos, setConsumos] = useState<ConsumoEnergetico[]>(CONSUMOS_PRECARGADOS)
+type SortField = 'anio' | 'electricidad_kWh' | 'gas_natural_m3' | 'glp_kg' | 'carbon_kg' | 'fe_sin_kgCO2kWh'
+type SortOrder = 'asc' | 'desc'
+
+interface SeccionEntradaConsumoProps {
+  consumos: ConsumoEnergetico[]
+  onConsumosChange: (consumos: ConsumoEnergetico[]) => void
+}
+
+export function SeccionEntradaConsumo({ consumos, onConsumosChange }: SeccionEntradaConsumoProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [searchYear, setSearchYear] = useState("")
+  const [sortConfig, setSortConfig] = useState<{field: SortField, order: SortOrder}>({
+    field: 'anio',
+    order: 'desc'
+  })
+
+  const handleSort = (field: SortField) => {
+    setSortConfig(prev => ({
+      field,
+      order: prev.field === field && prev.order === 'desc' ? 'asc' : 'desc'
+    }))
+  }
+
+  const filteredAndSortedConsumos = useMemo(() => {
+    return [...consumos]
+      .filter(consumo => 
+        searchYear === "" || 
+        consumo.anio.toString().includes(searchYear)
+      )
+      .sort((a, b) => {
+        const multiplier = sortConfig.order === 'asc' ? 1 : -1
+        return (a[sortConfig.field] - b[sortConfig.field]) * multiplier
+      })
+  }, [consumos, searchYear, sortConfig])
 
   const handleEdit = (id: string) => {
     setEditingId(id)
   }
 
   const handleSave = (id: string, field: keyof ConsumoEnergetico, value: number) => {
-    setConsumos(
-      consumos.map((c) =>
-        c.id === id ? { ...c, [field]: value } : c
-      )
-    )
+    const newConsumos = consumos.map((c) =>
+      c.id === id ? { ...c, [field]: value } : c
+    ).sort((a, b) => b.anio - a.anio)
+    
+    onConsumosChange(newConsumos)
   }
 
   const handleDelete = (id: string) => {
-    setConsumos(consumos.filter((c) => c.id !== id))
+    const newConsumos = consumos
+      .filter((c) => c.id !== id)
+      .sort((a, b) => b.anio - a.anio)
+    
+    onConsumosChange(newConsumos)
   }
 
   const handleAdd = () => {
@@ -52,8 +88,15 @@ export function SeccionEntradaConsumo() {
       carbon_kg: 0,
       fe_sin_kgCO2kWh: fe || defaultFE,
     }
-    setConsumos([...consumos, newConsumo])
+    
+    const newConsumos = [...consumos, newConsumo].sort((a, b) => b.anio - a.anio)
+    onConsumosChange(newConsumos)
     setEditingId(newConsumo.id)
+  }
+
+  const getSortIcon = (field: SortField) => {
+    if (sortConfig.field !== field) return '↕️'
+    return sortConfig.order === 'asc' ? '↑' : '↓'
   }
 
   const calcularEmisionesTotales = (consumo: ConsumoEnergetico) => {
@@ -71,22 +114,74 @@ export function SeccionEntradaConsumo() {
         Ingrese los datos de consumo energético por año
       </p>
 
+      <div className={styles.searchContainer}>
+        <Input
+          type="text"
+          placeholder="Buscar por año..."
+          value={searchYear}
+          onChange={(e) => setSearchYear(e.target.value)}
+          className={styles.searchInput}
+        />
+      </div>
+
       <div className={styles.tableContainer}>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Año</TableHead>
-              <TableHead>Electricidad (kWh)</TableHead>
-              <TableHead>Gas Natural (m³)</TableHead>
-              <TableHead>GLP (kg)</TableHead>
-              <TableHead>Carbón (kg)</TableHead>
-              <TableHead>FE SIN (kgCO₂/kWh)</TableHead>
+              <TableHead>
+                <button 
+                  onClick={() => handleSort('anio')}
+                  className={styles.sortButton}
+                >
+                  Año {getSortIcon('anio')}
+                </button>
+              </TableHead>
+              <TableHead>
+                <button 
+                  onClick={() => handleSort('electricidad_kWh')}
+                  className={styles.sortButton}
+                >
+                  Electricidad (kWh) {getSortIcon('electricidad_kWh')}
+                </button>
+              </TableHead>
+              <TableHead>
+                <button 
+                  onClick={() => handleSort('gas_natural_m3')}
+                  className={styles.sortButton}
+                >
+                  Gas Natural (m³) {getSortIcon('gas_natural_m3')}
+                </button>
+              </TableHead>
+              <TableHead>
+                <button 
+                  onClick={() => handleSort('glp_kg')}
+                  className={styles.sortButton}
+                >
+                  GLP (kg) {getSortIcon('glp_kg')}
+                </button>
+              </TableHead>
+              <TableHead>
+                <button 
+                  onClick={() => handleSort('carbon_kg')}
+                  className={styles.sortButton}
+                >
+                  Carbón (kg) {getSortIcon('carbon_kg')}
+                </button>
+              </TableHead>
+              <TableHead>
+                <button 
+                  onClick={() => handleSort('fe_sin_kgCO2kWh')}
+                  className={styles.sortButton}
+                >
+                  FE SIN (kgCO₂/kWh) {getSortIcon('fe_sin_kgCO2kWh')}
+                </button>
+              </TableHead>
               <TableHead>Emisiones Totales (tCO₂)</TableHead>
               <TableHead>Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {consumos.map((consumo) => (
+            {filteredAndSortedConsumos.map((consumo) => (
               <TableRow key={consumo.id}>
                 <TableCell>
                   {editingId === consumo.id ? (
@@ -161,32 +256,31 @@ export function SeccionEntradaConsumo() {
                     consumo.carbon_kg.toLocaleString()
                   )}
                 </TableCell>
-                <TableCell>{consumo.fe_sin_kgCO2kWh}</TableCell>
+                <TableCell>
+                  {editingId === consumo.id ? (
+                    <Input
+                      type="number"
+                      value={consumo.fe_sin_kgCO2kWh}
+                      onChange={(e) =>
+                        handleSave(
+                          consumo.id,
+                          "fe_sin_kgCO2kWh",
+                          Number(e.target.value)
+                        )
+                      }
+                      step="0.001"
+                    />
+                  ) : (
+                    consumo.fe_sin_kgCO2kWh
+                  )}
+                </TableCell>
                 <TableCell>{calcularEmisionesTotales(consumo)}</TableCell>
                 <TableCell>
-                  <div className={styles.actionCell}>
-                    {editingId === consumo.id ? (
-                      <button
-                        onClick={() => setEditingId(null)}
-                        className={styles.editButton}
-                      >
-                        Guardar
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleEdit(consumo.id)}
-                        className={styles.editButton}
-                      >
-                        Editar
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleDelete(consumo.id)}
-                      className={styles.deleteButton}
-                    >
-                      Eliminar
-                    </button>
-                  </div>
+                  <ActionButtons
+                    isEditing={editingId === consumo.id}
+                    onEdit={() => editingId === consumo.id ? setEditingId(null) : handleEdit(consumo.id)}
+                    onDelete={() => handleDelete(consumo.id)}
+                  />
                 </TableCell>
               </TableRow>
             ))}

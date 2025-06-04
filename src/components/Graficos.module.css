@@ -1,22 +1,27 @@
 .container {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
+  width: 100%;
+  padding: 1rem;
 }
 
-.yearSelector {
+.yearSelectors {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.yearSelectorGroup {
   background-color: white;
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
-  padding: 1.5rem;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  padding: 1rem;
 }
 
 .yearTitle {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
+  color: #374151;
   margin-bottom: 1rem;
-  color: #111827;
 }
 
 .yearButtons {
@@ -27,34 +32,37 @@
 
 .yearButton {
   padding: 0.5rem 1rem;
+  border: 1px solid #e5e7eb;
   border-radius: 0.375rem;
+  background-color: white;
+  color: #6b7280;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 200ms;
-  border: 1px solid #e5e7eb;
+}
+
+.yearButton:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
 }
 
 .yearButtonActive {
   background-color: #3b82f6;
-  color: white;
   border-color: #3b82f6;
+  color: white;
 }
 
-.yearButton:hover:not(.yearButtonActive) {
-  background-color: #f3f4f6;
+.yearButtonActive:hover {
+  background-color: #2563eb;
+  color: white;
 }
 
 .chartsGrid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-}
-
-@media (min-width: 768px) {
-  .chartsGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 600px), 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
 }
 
 .chartCard {
@@ -65,42 +73,40 @@
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
 .chartTitle {
   font-size: 1.125rem;
   font-weight: 600;
-  margin-bottom: 1rem;
   color: #111827;
-}
-
-.fullWidth {
-  grid-column: 1 / -1;
+  margin-bottom: 1.5rem;
+  text-align: center;
 }
 
 .noDataMessage {
   text-align: center;
   color: #6b7280;
-  padding: 2rem 0;
+  padding: 2rem;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  margin-top: 2rem;
 }
 
 .tooltipContent {
   padding: 0.5rem;
-  background-color: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.375rem;
-  min-width: 150px;
 }
 
 .tooltipTitle {
   font-weight: 600;
-  font-size: 0.875rem;
-  color: #111827;
   margin-bottom: 0.25rem;
 }
 
 .tooltipValue {
+  color: #6b7280;
   font-size: 0.875rem;
-  color: #6B7280;
-  margin-bottom: 0.125rem;
 }
 
 @media (max-width: 640px) {
