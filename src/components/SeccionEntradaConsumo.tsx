@@ -39,7 +39,7 @@ export function SeccionEntradaConsumo() {
     const currentYear = new Date().getFullYear()
     const defaultFE = 0.2
     
-    // Verificar si el año existe en FE_SIN_ANUAL y usar el valor más reciente si no existe
+    // Obtener el factor de emisión más reciente
     const fe = Object.entries(FE_SIN_ANUAL)
       .sort(([yearA], [yearB]) => Number(yearB) - Number(yearA))[0][1]
     

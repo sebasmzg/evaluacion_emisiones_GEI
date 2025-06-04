@@ -1,0 +1,51 @@
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  color: var(--foreground);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.buttonContainer {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+}
+
+.resultsSection {
+  margin-top: 2rem;
+}
+
+.resultsTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: var(--foreground);
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .resultsTitle {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+} 

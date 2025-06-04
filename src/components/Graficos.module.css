@@ -1,0 +1,132 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.yearSelector {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.yearTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #111827;
+}
+
+.yearButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.yearButton {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms;
+  border: 1px solid #e5e7eb;
+}
+
+.yearButtonActive {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.yearButton:hover:not(.yearButtonActive) {
+  background-color: #f3f4f6;
+}
+
+.chartsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .chartsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.chartCard {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.chartTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #111827;
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.noDataMessage {
+  text-align: center;
+  color: #6b7280;
+  padding: 2rem 0;
+}
+
+.tooltipContent {
+  padding: 0.5rem;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  min-width: 150px;
+}
+
+.tooltipTitle {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.tooltipValue {
+  font-size: 0.875rem;
+  color: #6B7280;
+  margin-bottom: 0.125rem;
+}
+
+@media (max-width: 640px) {
+  .chartsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .chartCard {
+    padding: 1rem;
+  }
+
+  .chartTitle {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .tooltipContent {
+    min-width: 120px;
+    font-size: 0.75rem;
+  }
+
+  .tooltipTitle {
+    font-size: 0.75rem;
+  }
+
+  .tooltipValue {
+    font-size: 0.75rem;
+  }
+} 
